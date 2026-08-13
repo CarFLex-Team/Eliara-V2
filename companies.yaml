@@ -1,0 +1,42 @@
+# Company registry. Loaded by app.company.registry.CompanyRegistry at
+# startup (path set by ELIARA_COMPANIES_CONFIG, default "companies.yaml").
+#
+# Each entry becomes a CompanyConfig. Only company_id, display_name, and
+# db_path are required — everything else has a sane default (empty scan
+# list, no company-specific prompts/playbooks, shared embedding cache dir).
+#
+# Do not hardcode a company's db path, scan views, or directories anywhere
+# else in the codebase — this file is the single source of truth for that.
+
+companies:
+  beta:
+    display_name: "Beta"
+    db_path: data/companies/beta/beta.db
+    playbooks_dir: companies/beta/playbooks
+    prompts_dir: companies/beta/prompts
+    embedding_cache_dir: data/cache/beta
+    boundaries_table: fact_ai_sales_net
+    boundaries_date_column: posting_date_iso
+    scan_views:
+      - vw_q012_liquidation_items_highest_capital_locked
+      - vw_engine_dead_stock_by_item_group
+      - vw_engine_dead_stock_by_warehouse
+      - vw_chatbot_slow_moving_items_becoming_dead_stock
+      - vw_q018_slow_moving_items_review_priority
+      - vw_inventory_action_stockout_replenishment
+      - vw_inventory_action_overstock_excess
+
+  tire_guru:
+    display_name: "Tire Guru"
+    db_path: data/companies/tire_guru/tire_guru.db
+    playbooks_dir: companies/tire_guru/playbooks
+    prompts_dir: companies/tire_guru/prompts
+    embedding_cache_dir: data/cache/tire_guru
+    # No curated scan views yet — populate once Tire Guru's real dead-stock/
+    # replenishment/liquidation-style views are confirmed. /scan will report
+    # "nothing configured" rather than erroring until then.
+    scan_views: []
+    # boundaries_table/boundaries_date_column intentionally omitted: Tire
+    # Guru's fact-table name isn't confirmed yet, so /health/deep will skip
+    # the "data through <date>" line for this company rather than assume
+    # Beta's table name applies.

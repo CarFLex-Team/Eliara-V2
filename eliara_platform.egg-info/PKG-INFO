@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: eliara-platform
+Version: 0.1.0
+Summary: Read-only AI business analytics platform over the Eliara analytical database (SAP B1 derived).
+Requires-Python: >=3.12
+Requires-Dist: fastapi>=0.115
+Requires-Dist: uvicorn[standard]>=0.30
+Requires-Dist: pydantic>=2.8
+Requires-Dist: pydantic-settings>=2.4
+Requires-Dist: structlog>=24.4
+Requires-Dist: anthropic>=0.40
+Requires-Dist: cachetools>=5.5
+Requires-Dist: numpy>=1.26
+Requires-Dist: rank-bm25>=0.2.2
+Requires-Dist: jinja2>=3.1
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: sqlglot>=25.0
+Provides-Extra: ml
+Requires-Dist: sentence-transformers>=3.0; extra == "ml"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.3; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.24; extra == "dev"
+Requires-Dist: httpx>=0.27; extra == "dev"
+Requires-Dist: respx>=0.21; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"

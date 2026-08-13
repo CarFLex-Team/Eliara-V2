@@ -1,0 +1,58 @@
+services:
+  eliara:
+    build: .
+    image: eliara:latest
+    # The Cloudflare tunnel's ingress rule lives in the Zero Trust dashboard,
+    # not here, and points at http://backend:8000. Docker DNS resolves the
+    # service name, the container_name, and any network alias — so we answer
+    # to all three rather than renaming and breaking the dashboard again.
+    container_name: eliara-api
+    networks:
+      default:
+        aliases:
+          - backend
+          - eliara-api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      # Multi-company registry — see companies.yaml and app/company/registry.py.
+      # Company-specific db paths/scan views/prompts/playbooks live in that
+      # file, not here; these are the platform-wide paths only.
+      ELIARA_COMPANIES_CONFIG: /srv/eliara/companies.yaml
+      ELIARA_DEFAULT_COMPANY_ID: ${ELIARA_DEFAULT_COMPANY_ID:-beta}
+      ELIARA_EMBEDDING_CACHE_DIR: /srv/eliara/cache
+      ELIARA_AUDIT_DIR: /srv/eliara/audit
+      # The browser calls this API cross-origin from the Vercel app. No
+      # cookies are sent, so "*" is safe; pin origins once the domain settles.
+      ELIARA_CORS_ORIGINS: ${ELIARA_CORS_ORIGINS:-*}
+      ELIARA_LEGACY_API_ENABLED: "true"
+      # fails fast at `up` time instead of at first Claude call
+      ELIARA_ANTHROPIC_API_KEY: ${ELIARA_ANTHROPIC_API_KEY:?set ELIARA_ANTHROPIC_API_KEY in .env}
+    volumes:
+      # companies.yaml maps company_id -> db_path (relative to /srv/eliara),
+      # so each company's database is bind-mounted under the SAME base dir
+      # that companies.yaml's paths are written against.
+      - ./companies.yaml:/srv/eliara/companies.yaml:ro
+      - ./companies:/srv/eliara/companies:ro
+      - ${ELIARA_BETA_DB_HOST_PATH:-./data/companies/beta/beta.db}:/srv/eliara/data/companies/beta/beta.db:ro
+      - ${ELIARA_TIRE_GURU_DB_HOST_PATH:-./data/companies/tire_guru/tire_guru.db}:/srv/eliara/data/companies/tire_guru/tire_guru.db:ro
+      # writable: embeddings cache (one subdir per company) + audit trail
+      # (one subdir per company) survive restarts
+      - eliara-cache:/srv/eliara/cache
+      - ${ELIARA_AUDIT_HOST_PATH:-./audit}:/srv/eliara/audit
+    restart: unless-stopped
+
+  # Only starts with `--profile tunnel`; plain `docker compose up` ignores it.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      - eliara
+    restart: unless-stopped
+
+volumes:
+  eliara-cache:

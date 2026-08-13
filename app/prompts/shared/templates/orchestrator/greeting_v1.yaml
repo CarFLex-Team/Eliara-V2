@@ -1,0 +1,19 @@
+name: greeting_message
+version: 1
+description: >
+  Static welcome message returned instantly (no LLM call) when the routing
+  decision is "greeting". Edit freely — plain text, no variables.
+system: ""
+user_template: |
+  Hi — I'm Eliara, Beta's business intelligence copilot.
+
+  I answer questions about your live company data: sales and revenue,
+  customers, inventory health, dead stock, procurement, and supplier risk.
+
+  Try asking me:
+  - "Who are our top 10 customers by lifetime revenue?"
+  - "Which items are dead stock right now?"
+  - "Which suppliers look risky?"
+  - "How much capital is tied up in slow-moving stock?"
+
+  What would you like to look into?

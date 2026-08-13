@@ -1,0 +1,20 @@
+# Beta's entry from companies.yaml (the shared company registry file).
+# This is not a standalone file in the repo — it's one entry under
+# `companies:` in companies.yaml, extracted here for reference.
+
+beta:
+  display_name: "Beta"
+  db_path: data/companies/beta/beta.db
+  playbooks_dir: companies/beta/playbooks
+  prompts_dir: companies/beta/prompts
+  embedding_cache_dir: data/cache/beta
+  boundaries_table: fact_ai_sales_net
+  boundaries_date_column: posting_date_iso
+  scan_views:
+    - vw_q012_liquidation_items_highest_capital_locked
+    - vw_engine_dead_stock_by_item_group
+    - vw_engine_dead_stock_by_warehouse
+    - vw_chatbot_slow_moving_items_becoming_dead_stock
+    - vw_q018_slow_moving_items_review_priority
+    - vw_inventory_action_stockout_replenishment
+    - vw_inventory_action_overstock_excess
