@@ -8,10 +8,8 @@ serving live requests.
 """
 
 import asyncio
-import sqlite3
 
 import httpx
-import pytest
 import yaml
 
 from app.llm.anthropic_client import AnthropicClient, LLMResponse
@@ -74,40 +72,42 @@ async def test_startup_survives_one_company_missing_database(tmp_path, monkeypat
 
     app = create_app()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
-        async with app.router.lifespan_context(app):
-            # Process came up at all — that's the headline assertion.
-            manager = app.state.company_manager
-            assert manager is not None
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://t") as client,
+        app.router.lifespan_context(app),
+    ):
+        # Process came up at all — that's the headline assertion.
+        manager = app.state.company_manager
+        assert manager is not None
 
-            contexts = manager.all_contexts()
-            beta_ctx = contexts["beta"]
-            tire_ctx = contexts["tire_guru"]
-            assert beta_ctx.healthy is True
-            assert tire_ctx.healthy is False
-            assert tire_ctx.startup_error is not None
+        contexts = manager.all_contexts()
+        beta_ctx = contexts["beta"]
+        tire_ctx = contexts["tire_guru"]
+        assert beta_ctx.healthy is True
+        assert tire_ctx.healthy is False
+        assert tire_ctx.startup_error is not None
 
-            # Beta keeps serving normally despite Tire Guru's failed build.
-            response = await client.post(
-                "/api/v1/chat",
-                json={"company_id": "beta", "session_id": "s1", "message": "top customers?"},
-            )
-            assert response.status_code == 200
+        # Beta keeps serving normally despite Tire Guru's failed build.
+        response = await client.post(
+            "/api/v1/chat",
+            json={"company_id": "beta", "session_id": "s1", "message": "top customers?"},
+        )
+        assert response.status_code == 200
 
-            # Tire Guru surfaces a clean structured error, not a raw
-            # traceback — SQLExecutionError's default status_code (500)
-            # applies here, same as any other query failure would get.
-            response = await client.post(
-                "/api/v1/chat",
-                json={"company_id": "tire_guru", "session_id": "s1", "message": "top customers?"},
-            )
-            assert response.status_code == 500
-            assert "error" in response.json()
+        # Tire Guru surfaces a clean structured error, not a raw
+        # traceback — SQLExecutionError's default status_code (500)
+        # applies here, same as any other query failure would get.
+        response = await client.post(
+            "/api/v1/chat",
+            json={"company_id": "tire_guru", "session_id": "s1", "message": "top customers?"},
+        )
+        assert response.status_code == 500
+        assert "error" in response.json()
 
-            # health/deep reflects both accurately, independently.
-            health = (await client.get("/api/v1/health/deep")).json()
-            assert health["companies"]["beta"]["status"] == "ok"
-            assert health["companies"]["tire_guru"]["status"] == "degraded"
+        # health/deep reflects both accurately, independently.
+        health = (await client.get("/api/v1/health/deep")).json()
+        assert health["companies"]["beta"]["status"] == "ok"
+        assert health["companies"]["tire_guru"]["status"] == "degraded"
     get_settings.cache_clear()
 
 
@@ -226,38 +226,40 @@ async def test_refresh_for_one_company_does_not_interrupt_the_other_under_live_t
 
     app = create_app()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
-        async with app.router.lifespan_context(app):
-            manager = app.state.company_manager
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://t") as client,
+        app.router.lifespan_context(app),
+    ):
+        manager = app.state.company_manager
 
-            async def hammer_tire_guru():
-                results = []
-                for i in range(20):
-                    r = await client.post(
-                        "/api/v1/chat",
-                        json={"company_id": "tire_guru", "session_id": f"live{i}",
-                              "message": "top customers?"},
-                    )
-                    results.append(r.status_code)
-                return results
+        async def hammer_tire_guru():
+            results = []
+            for i in range(20):
+                r = await client.post(
+                    "/api/v1/chat",
+                    json={"company_id": "tire_guru", "session_id": f"live{i}",
+                          "message": "top customers?"},
+                )
+                results.append(r.status_code)
+            return results
 
-            async def refresh_beta_midway():
-                await asyncio.sleep(0.02)
-                # Simulate a SAP-style refresh landing on Beta's file while
-                # Tire Guru traffic is in flight, then let the watcher pick
-                # it up via the same refresh path a real change would use.
-                build_fixture_db(beta_db, extra_sales_rows=3)
-                manager._refresh("beta")
+        async def refresh_beta_midway():
+            await asyncio.sleep(0.02)
+            # Simulate a SAP-style refresh landing on Beta's file while
+            # Tire Guru traffic is in flight, then let the watcher pick
+            # it up via the same refresh path a real change would use.
+            build_fixture_db(beta_db, extra_sales_rows=3)
+            manager._refresh("beta")
 
-            tire_results, _ = await asyncio.gather(hammer_tire_guru(), refresh_beta_midway())
+        tire_results, _ = await asyncio.gather(hammer_tire_guru(), refresh_beta_midway())
 
-            # Every Tire Guru request succeeded throughout Beta's refresh.
-            assert all(code == 200 for code in tire_results)
+        # Every Tire Guru request succeeded throughout Beta's refresh.
+        assert all(code == 200 for code in tire_results)
 
-            # Beta's own next request reflects the refreshed data set.
-            response = await client.post(
-                "/api/v1/chat",
-                json={"company_id": "beta", "session_id": "post-refresh", "message": "top customers?"},
-            )
-            assert response.status_code == 200
+        # Beta's own next request reflects the refreshed data set.
+        response = await client.post(
+            "/api/v1/chat",
+            json={"company_id": "beta", "session_id": "post-refresh", "message": "top customers?"},
+        )
+        assert response.status_code == 200
     get_settings.cache_clear()

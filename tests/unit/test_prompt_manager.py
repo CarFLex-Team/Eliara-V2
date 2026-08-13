@@ -1,6 +1,7 @@
 import pytest
+from jinja2 import UndefinedError
 
-from app.prompts.loader import PromptManager, PromptError
+from app.prompts.loader import PromptError, PromptManager
 
 
 @pytest.fixture(scope="module")
@@ -56,7 +57,7 @@ def test_caution_toggles_wording(prompts):
 
 
 def test_missing_variable_raises(prompts):
-    with pytest.raises(Exception):
+    with pytest.raises(UndefinedError):
         prompts.render("orchestrator_answer", data_as_of="x")
 
 

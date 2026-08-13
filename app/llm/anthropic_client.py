@@ -225,7 +225,7 @@ class AnthropicClient:
         cleaned = text.strip()
         if cleaned.startswith("```"):
             cleaned = cleaned.strip("`")
-            cleaned = cleaned[4:] if cleaned.startswith("json") else cleaned
+            cleaned = cleaned.removeprefix("json")
         start, end = cleaned.find("{"), cleaned.rfind("}")
         if start == -1 or end == -1:
             raise json.JSONDecodeError("no JSON object found", cleaned, 0)

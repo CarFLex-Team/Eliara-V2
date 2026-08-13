@@ -152,8 +152,8 @@ async def test_needs_sql_happy_path(discovery, executor):
             ),
         ),
         call_texts=[
-            "SELECT warehouse_name, AVG(net_revenue) AS avg_rev "
-            "FROM fact_ai_sales_net GROUP BY warehouse_name",
+            ("SELECT warehouse_name, AVG(net_revenue) AS avg_rev "
+            "FROM fact_ai_sales_net GROUP BY warehouse_name"),
             "Custom analysis answer.",
         ],
     )
@@ -256,9 +256,9 @@ async def test_expired_sessions_purged_on_request(discovery, executor):
     from app.orchestrator.conversation import Message
 
     orch._conversations.append("stale", Message(role="user", content="old"))
-    import time
+    import asyncio
 
-    time.sleep(0.01)
+    await asyncio.sleep(0.01)
     await orch.handle("fresh", "hello")
     assert orch._conversations.get_history("stale") == []
 
@@ -277,8 +277,8 @@ async def test_sql_slice_built_from_resolved_task_not_fragment(discovery, execut
             ),
         ),
         call_texts=[
-            "SELECT customer_code, SUM(net_revenue) AS rev FROM fact_ai_sales_net "
-            "GROUP BY customer_code",
+            ("SELECT customer_code, SUM(net_revenue) AS rev FROM fact_ai_sales_net "
+            "GROUP BY customer_code"),
             "Answer.",
         ],
     )

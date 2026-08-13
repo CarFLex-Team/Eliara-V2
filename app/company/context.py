@@ -19,9 +19,8 @@ context can only ever reach company A's objects.
 
 import threading
 from dataclasses import dataclass
-from pathlib import Path
 
-from app.company.registry import CompanyConfig, CompanyRegistry, UnknownCompany
+from app.company.registry import CompanyConfig, CompanyRegistry
 from app.core.audit import AuditTrail
 from app.core.cache import ResultCache
 from app.core.config import Settings
@@ -110,12 +109,11 @@ class CompanyContextManager:
                 with self._lock:
                     self._contexts[company_id] = self._build(company_id)
                 log.info("company_context_ready", company_id=company_id)
-            except Exception as exc:  # noqa: BLE001 - isolate per-company startup failure
-                log.error(
+            except Exception as exc:
+                log.exception(
                     "company_context_build_failed",
                     company_id=company_id,
                     error=str(exc),
-                    exc_info=True,
                 )
                 cfg = self._registry.get(company_id)
                 self._contexts[company_id] = _failed_context(company_id, cfg, str(exc))
@@ -127,7 +125,7 @@ class CompanyContextManager:
                     ctx.watcher.stop()
                 if ctx.executor is not None:
                     ctx.executor.close()
-            except Exception:  # noqa: BLE001 - best-effort shutdown per company
+            except Exception:
                 log.warning("company_context_shutdown_failed", company_id=company_id, exc_info=True)
 
     # ------------------------------------------------------------- building

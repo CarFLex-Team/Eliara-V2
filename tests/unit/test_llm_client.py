@@ -80,7 +80,7 @@ class Decision(BaseModel):
 async def test_structured_call_parses_fenced_json():
     payload = '```json\n{"decision": "use_view", "view_name": "vw_q002"}\n```'
     client = _client(lambda req: httpx.Response(200, json=_api_response(payload)))
-    decision, response = await client.structured_call(PROMPT, Decision, model="m")
+    decision, _response = await client.structured_call(PROMPT, Decision, model="m")
     assert decision.decision == "use_view"
     assert decision.view_name == "vw_q002"
 

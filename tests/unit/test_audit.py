@@ -4,13 +4,13 @@ from app.core.audit import AuditTrail
 
 
 def _record(trail, **overrides):
-    payload = dict(
-        company_id="beta",
-        session_id="s1", question="who are the top customers?",
-        decision="use_view", view_used="vw_q002", generated_sql=None,
-        cache_hit=False, latency_ms=100, input_tokens=10, output_tokens=5,
-        answer="Beta Motors leads.",
-    )
+    payload = {
+        "company_id": "beta",
+        "session_id": "s1", "question": "who are the top customers?",
+        "decision": "use_view", "view_used": "vw_q002", "generated_sql": None,
+        "cache_hit": False, "latency_ms": 100, "input_tokens": 10, "output_tokens": 5,
+        "answer": "Beta Motors leads.",
+    }
     payload.update(overrides)
     trail.record(**payload)
 

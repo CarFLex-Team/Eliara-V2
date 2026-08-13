@@ -215,7 +215,7 @@ def verify(
     if result is None or not result.rows:
         return VerificationReport(status="skipped")
 
-    truth, labels = _build_ground_truth(result)
+    truth, _labels = _build_ground_truth(result)
     # Numbers the user themselves supplied are fair game to repeat.
     question_numbers = {
         parsed[0]

@@ -10,7 +10,6 @@ ready, or the company_id doesn't exist.
 from fastapi import Request
 
 from app.company.context import CompanyContext
-from app.company.registry import UnknownCompany
 from app.core.errors import EliaraError
 
 

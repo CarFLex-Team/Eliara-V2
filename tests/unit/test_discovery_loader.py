@@ -1,8 +1,8 @@
 import pytest
 
 from app.discovery.metadata_loader import MetadataLoader
-from tests.fixtures.fixture_db import build_fixture_db
 from app.execution.executor import ReadOnlyExecutor
+from tests.fixtures.fixture_db import build_fixture_db
 
 
 @pytest.fixture()

@@ -55,10 +55,10 @@ REJECTED = [
     "SELECT readfile('/etc/passwd')",
     "SELECT writefile('/tmp/x', customer_code) FROM fact_ai_sales_net",
     # --- non-portable joins (SQLite build-dependent, real production failure) ---
-    "SELECT f.customer_code, d.item_name FROM fact_ai_sales_net f "
-    "FULL OUTER JOIN dim_b3_item d ON f.item_code = d.item_code",
-    "SELECT f.customer_code, d.item_name FROM fact_ai_sales_net f "
-    "RIGHT JOIN dim_b3_item d ON f.item_code = d.item_code",
+    ("SELECT f.customer_code, d.item_name FROM fact_ai_sales_net f "
+    "FULL OUTER JOIN dim_b3_item d ON f.item_code = d.item_code"),
+    ("SELECT f.customer_code, d.item_name FROM fact_ai_sales_net f "
+    "RIGHT JOIN dim_b3_item d ON f.item_code = d.item_code"),
     # --- not SQL / garbage ---
     "hello there",
     "",
@@ -68,26 +68,26 @@ ACCEPTED = [
     "SELECT customer_code, net_revenue FROM fact_ai_sales_net",
     "SELECT * FROM dim_b3_item",
     "SELECT COUNT(*) FROM fact_ai_sales_net",
-    "SELECT customer_name, SUM(net_revenue) AS total FROM fact_ai_sales_net "
-    "GROUP BY customer_name ORDER BY total DESC",
-    "SELECT warehouse_name, AVG(net_revenue) AS avg_rev FROM fact_ai_sales_net "
-    "WHERE year = '2025' GROUP BY warehouse_name",
-    "WITH top AS (SELECT customer_code, SUM(net_revenue) AS rev "
+    ("SELECT customer_name, SUM(net_revenue) AS total FROM fact_ai_sales_net "
+    "GROUP BY customer_name ORDER BY total DESC"),
+    ("SELECT warehouse_name, AVG(net_revenue) AS avg_rev FROM fact_ai_sales_net "
+    "WHERE year = '2025' GROUP BY warehouse_name"),
+    ("WITH top AS (SELECT customer_code, SUM(net_revenue) AS rev "
     "FROM fact_ai_sales_net GROUP BY customer_code) "
-    "SELECT customer_code, rev FROM top ORDER BY rev DESC",
-    "SELECT f.item_code, d.item_name, f.net_revenue FROM fact_ai_sales_net f "
-    "JOIN dim_b3_item d ON f.item_code = d.item_code",
+    "SELECT customer_code, rev FROM top ORDER BY rev DESC"),
+    ("SELECT f.item_code, d.item_name, f.net_revenue FROM fact_ai_sales_net f "
+    "JOIN dim_b3_item d ON f.item_code = d.item_code"),
     "SELECT item_code FROM dim_b3_item UNION SELECT item_code FROM engine_margin_base",
     "SELECT COALESCE(SUM(net_revenue), 0) AS rev FROM fact_ai_sales_net",
-    "SELECT strftime('%Y', posting_date_iso) AS yr, SUM(net_revenue) AS rev "
-    "FROM fact_ai_sales_net GROUP BY yr",
+    ("SELECT strftime('%Y', posting_date_iso) AS yr, SUM(net_revenue) AS rev "
+    "FROM fact_ai_sales_net GROUP BY yr"),
     "SELECT customer_code FROM fact_ai_sales_net LIMIT 10",
     "SELECT t.item_code FROM (SELECT item_code FROM dim_b3_item) t",
     "SELECT item_code, margin_pct FROM engine_margin_base WHERE margin_pct > 0.3",
-    "SELECT customer_code, net_revenue FROM fact_ai_sales_net "
-    "WHERE net_revenue > (SELECT AVG(net_revenue) FROM fact_ai_sales_net)",
-    "SELECT year_month, SUM(net_quantity) AS qty FROM fact_ai_sales_net "
-    "GROUP BY year_month HAVING qty > 0",
+    ("SELECT customer_code, net_revenue FROM fact_ai_sales_net "
+    "WHERE net_revenue > (SELECT AVG(net_revenue) FROM fact_ai_sales_net)"),
+    ("SELECT year_month, SUM(net_quantity) AS qty FROM fact_ai_sales_net "
+    "GROUP BY year_month HAVING qty > 0"),
 ]
 
 
