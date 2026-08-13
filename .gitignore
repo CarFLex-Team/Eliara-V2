@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.env
+data/
+*.db
+*.npz
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+*.jsonl
+audit/
