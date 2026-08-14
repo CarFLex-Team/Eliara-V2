@@ -7,6 +7,7 @@ verified server-side before it touches the database.
 """
 
 import asyncio
+import re
 import time
 from collections.abc import Awaitable, Callable
 
@@ -622,19 +623,33 @@ class Orchestrator:
     def _glossary_for(self, message: str) -> str | None:
         """Definitions for glossary terms the question actually mentions.
 
-        The business glossary is loaded at startup but was never shown to the
-        answer model, so "dead stock" or "churn risk" were interpreted from
-        general knowledge rather than from the company's own definition.
+        The business glossary is loaded at startup and shown to the answer
+        model so a term like "dead stock" or "churn risk" is interpreted
+        from the company's own definition, not the model's general
+        knowledge. Two-tier match: an exact substring match (handles
+        single-word terms and exact phrases, same as before) plus a
+        distinctive-word match so a multi-word term like "customer churn"
+        still matches a question that only says "churn" — a plain substring
+        check only ever matched in the other direction (term inside the
+        full question), so a question shorter than the term never matched.
         """
         glossary = getattr(self._index, "glossary", None)
         if not glossary:
             return None
         lowered = message.lower()
-        hits = [
-            f"- {term}: {definition}"
-            for term, definition in glossary.items()
-            if term and term.lower() in lowered
-        ]
+        message_words = set(re.findall(r"[a-z0-9]+", lowered))
+        hits = []
+        for term, definition in glossary.items():
+            if not term:
+                continue
+            term_lower = term.lower()
+            term_words = set(re.findall(r"[a-z0-9]+", term_lower))
+            matched = term_lower in lowered
+            if not matched:
+                distinctive = {w for w in term_words if len(w) >= 4}
+                matched = bool(distinctive & message_words)
+            if matched:
+                hits.append(f"- {term}: {definition}")
         return "\n".join(hits[:5]) if hits else None
 
     def _verified(self, answer: str, result, message: str) -> str:

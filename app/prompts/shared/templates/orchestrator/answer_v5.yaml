@@ -91,5 +91,8 @@ user_template: |
   {% if glossary is defined and glossary %}
 
   ## Business definitions in scope
+  These are the company's own definitions. If the question asks about a term
+  listed here, you MUST use this definition — do not substitute a general or
+  industry-standard definition, even if it seems more familiar.
   {{ glossary }}
   {% endif %}
