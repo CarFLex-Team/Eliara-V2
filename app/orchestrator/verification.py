@@ -140,6 +140,22 @@ def _rounded_forms(value: float) -> set[float]:
         forms.add(as_percent)
         forms.add(round(as_percent, 1))
         forms.add(round(as_percent))
+    # An index centered on 1.0 (a seasonal index, a YoY multiplier, a
+    # normalized ratio) is almost always WRITTEN as its deviation from
+    # baseline: 1.17 becomes "17% above baseline", 0.95 becomes "5% below"
+    # or just "5%". This is a different transform from the fraction case
+    # above (which reads the value itself as a share); here the value is
+    # centered at 1.0 and the narrative reports the gap from that center.
+    # Scoped to a narrow, plausible index range (0.5-2.0) so this doesn't
+    # start accepting arbitrary (value-1)*100 forms for unrelated numbers.
+    if 0.5 <= value <= 2.0:
+        deviation_pct = (value - 1.0) * 100.0
+        forms.add(deviation_pct)
+        forms.add(round(deviation_pct, 1))
+        forms.add(round(deviation_pct))
+        forms.add(abs(deviation_pct))
+        forms.add(round(abs(deviation_pct), 1))
+        forms.add(round(abs(deviation_pct)))
     return forms
 
 
