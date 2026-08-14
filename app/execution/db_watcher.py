@@ -7,8 +7,8 @@ deterministically without sleeping.
 """
 
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from app.core.logging import get_logger
 
@@ -48,7 +48,7 @@ class DatabaseWatcher:
             try:
                 callback()
             except Exception:
-                log.error("db_refresh_callback_failed", exc_info=True)
+                log.exception("db_refresh_callback_failed")
         return True
 
     def _loop(self) -> None:

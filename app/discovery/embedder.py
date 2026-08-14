@@ -119,7 +119,8 @@ class EmbeddingCache:
             return None
         try:
             return np.load(path)["embeddings"]
-        except Exception:
+        except Exception:  # noqa: BLE001 - a corrupt/unreadable cache file must
+            # only mean "recompute the embeddings", never crash startup.
             return None
 
     def save(self, fingerprint: str, backend: str, embeddings: np.ndarray) -> None:

@@ -100,7 +100,8 @@ class PlaybookLibrary:
                 try:
                     playbook = Playbook(**yaml.safe_load(path.read_text()))
                     playbooks[playbook.name] = playbook
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - one malformed playbook YAML
+                    # must not prevent every other playbook from loading.
                     log.warning(
                         "playbook_invalid", file=path.name, error=str(exc)
                     )
@@ -172,7 +173,8 @@ def run_playbook(
             result: QueryResult = executor.run_view(
                 step.view, filters, limit=_STEP_ROW_CAP
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - one broken step must not
+            # abort the whole multi-step playbook run.
             log.warning(
                 "playbook_step_failed", playbook=playbook.name,
                 view=step.view, error=type(exc).__name__,

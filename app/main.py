@@ -19,9 +19,9 @@ from app.api.v1.health import router as health_router
 from app.api.v1.sessions import router as sessions_router
 from app.company.context import CompanyContextManager
 from app.company.registry import CompanyRegistry, CompanyRegistryError
-from app.core.config import get_settings
 from app.core.audit import AuditTrail
 from app.core.cache import RateLimiter
+from app.core.config import get_settings
 from app.core.errors import EliaraError
 from app.core.logging import get_logger, setup_logging
 from app.llm.anthropic_client import AnthropicClient
@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
     try:
         registry = CompanyRegistry.from_file(settings.companies_config_path)
     except CompanyRegistryError:
-        log.error("companies_registry_load_failed", path=str(settings.companies_config_path), exc_info=True)
+        log.exception("companies_registry_load_failed", path=str(settings.companies_config_path))
         registry = None
 
     if registry is not None:
@@ -104,7 +104,14 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
-        log.error("unhandled_error", error=type(exc).__name__, exc_info=True)
+        # log.exception() (not .error(..., exc_info=True)) — this IS an
+        # active exception-handling context (a registered FastAPI exception
+        # handler receiving the caught exception), even though ruff's
+        # static analysis for LOG014 only recognizes a literal `except:`
+        # block as one. The traceback is essential here: this is the
+        # catch-all for genuinely unexpected errors, the one place you most
+        # need it.
+        log.exception("unhandled_error", error=type(exc).__name__)
         return JSONResponse(
             status_code=500,
             content={"error": "An internal error occurred. Please try again."},

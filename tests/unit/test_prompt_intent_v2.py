@@ -14,10 +14,10 @@ def test_active_intent_resolves_follow_ups_and_v1_still_renderable():
     prompts = PromptManager()
     assert prompts.active_version("orchestrator_intent") >= 4
 
-    vars_ = dict(
-        data_as_of="2026-06-27", history=[], message="sort them by margin",
-        candidates=[], playbooks=[],
-    )
+    vars_ = {
+        "data_as_of": "2026-06-27", "history": [], "message": "sort them by margin",
+        "candidates": [], "playbooks": [],
+    }
     active = prompts.render("orchestrator_intent", **vars_)
     assert "Follow-up resolution" in active.system
     assert "COMBINED" in active.system

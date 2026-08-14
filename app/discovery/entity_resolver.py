@@ -335,7 +335,7 @@ def build_entity_index(
                 f'WHERE "{name_col}" IS NOT NULL AND TRIM("{name_col}") != ""',
                 row_cap=_MAX_ENTRIES_PER_ENTITY,
             )
-        except Exception as exc:  # a missing/odd table must not break startup
+        except Exception as exc:  # noqa: BLE001 - a missing/odd table must not break startup
             log.warning("entity_source_failed", entity=entity, source=source,
                         error=type(exc).__name__)
             continue

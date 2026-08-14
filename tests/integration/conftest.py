@@ -47,9 +47,11 @@ async def app_client(tmp_path, monkeypatch):
 
     app = create_app()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
-        async with app.router.lifespan_context(app):
-            yield client
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://t") as client,
+        app.router.lifespan_context(app),
+    ):
+        yield client
     get_settings.cache_clear()
 
 
@@ -130,11 +132,13 @@ async def two_company_client(tmp_path, monkeypatch):
 
     app = create_app()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://t") as client:
-        async with app.router.lifespan_context(app):
-            client.app_state = app.state  # convenience handle for the tests
-            client.llm_calls = calls
-            yield client
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://t") as client,
+        app.router.lifespan_context(app),
+    ):
+        client.app_state = app.state  # convenience handle for the tests
+        client.llm_calls = calls
+        yield client
     get_settings.cache_clear()
 
 

@@ -102,9 +102,11 @@ async def client(tmp_path, monkeypatch, request):
 
     app = create_app()
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
-        async with app.router.lifespan_context(app):
-            yield c
+    async with (
+        httpx.AsyncClient(transport=transport, base_url="http://t") as c,
+        app.router.lifespan_context(app),
+    ):
+        yield c
     get_settings.cache_clear()
 
 

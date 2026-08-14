@@ -130,10 +130,10 @@ def _freshness(last_date: str | None) -> tuple[str | None, int | None, str | Non
     if not last_date:
         return None, None, None
     try:
-        from datetime import date
+        from datetime import UTC, date, datetime
 
         parts = [int(p) for p in str(last_date)[:10].split("-")]
-        days = (date.today() - date(*parts)).days
+        days = (datetime.now(UTC).date() - date(*parts)).days
     except (ValueError, TypeError):
         return str(last_date), None, None
     status = "fresh" if days <= 2 else "recent" if days <= 7 else "stale"
@@ -184,7 +184,9 @@ async def _execute(request: Request, body: LegacyQueryRequest) -> dict[str, Any]
 
     try:
         ctx = get_company_context(request, company_id)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - any failure here means "unavailable",
+        # regardless of exception shape; surfaced uniformly as a clean error
+        # rather than letting a raw exception type leak to the client.
         public = getattr(exc, "public_message", "The analytics service is not ready. Please try again shortly.")
         code = "UNKNOWN_COMPANY" if type(exc).__name__ == "UnknownCompany" else "SERVICE_UNAVAILABLE"
         return _error(request_id, code, public, started)

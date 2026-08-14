@@ -712,16 +712,16 @@ class Orchestrator:
 
         if not queues:
             return (
-                "No configured views returned rankable data — nothing to report. "
+                ("No configured views returned rankable data — nothing to report. "
                 "This usually means the view names in scan_views need updating "
-                "for this deployment.",
+                "for this deployment."),
                 0, 0,
             )
 
         high_items = [(q, item) for q in queues for item in q.items if item.tier == "HIGH"]
         lines = [
-            f"Scanned {len(queues)} view{'s' if len(queues) != 1 else ''} — "
-            f"{len(high_items)} item{'s' if len(high_items) != 1 else ''} at the top tier."
+            (f"Scanned {len(queues)} view{'s' if len(queues) != 1 else ''} — "
+            f"{len(high_items)} item{'s' if len(high_items) != 1 else ''} at the top tier.")
         ]
         if high_items:
             lines.append("")
@@ -771,9 +771,9 @@ class Orchestrator:
         """
         if not question:
             return (
-                f"Add a question after {self._settings.external_prefix} — for example "
+                (f"Add a question after {self._settings.external_prefix} — for example "
                 f"\"{self._settings.external_prefix} who are the main OEM headlamp "
-                "manufacturers in China?\"",
+                "manufacturers in China?\""),
                 0,
                 0,
             )
@@ -947,8 +947,8 @@ class Orchestrator:
         if playbook.requires_entity:
             if not entity:
                 return (
-                    f"Which {playbook.entity_kind or 'record'} would you like me to "
-                    "look at? Give me a name or a code.",
+                    (f"Which {playbook.entity_kind or 'record'} would you like me to "
+                    "look at? Give me a name or a code."),
                     0,
                     0,
                 )
@@ -964,8 +964,8 @@ class Orchestrator:
                     )
                 if outcome.status == "unknown":
                     return (
-                        f'I could not find "{entity}" in the records. '
-                        "Please check the spelling, or give me the code instead.",
+                        (f'I could not find "{entity}" in the records. '
+                        "Please check the spelling, or give me the code instead."),
                         0,
                         0,
                     )
@@ -983,8 +983,8 @@ class Orchestrator:
 
         if not run.any_data:
             return (
-                f"I ran the {playbook.title.lower()} but found no data for it in "
-                "the current dataset.",
+                (f"I ran the {playbook.title.lower()} but found no data for it in "
+                "the current dataset."),
                 0,
                 0,
             )
@@ -1135,8 +1135,8 @@ class Orchestrator:
         }
         if candidate.requires_endpoint_filter and not filters:
             return (
-                "Please specify which item or customer you mean (a code or exact "
-                "name), and I'll pull the details.",
+                ("Please specify which item or customer you mean (a code or exact "
+                "name), and I'll pull the details."),
                 0,
                 0,
             )

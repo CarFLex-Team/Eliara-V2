@@ -86,7 +86,7 @@ class CompanyRegistry:
             fields.setdefault("company_id", company_id)
             try:
                 cfg = CompanyConfig(**fields)
-            except Exception as exc:  # noqa: BLE001 - surfaced as a clear config error
+            except Exception as exc:
                 raise CompanyRegistryError(
                     internal_detail=f"invalid config for company {company_id!r}: {exc}"
                 ) from exc

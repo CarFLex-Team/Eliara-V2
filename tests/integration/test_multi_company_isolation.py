@@ -9,6 +9,7 @@ import asyncio
 
 import pytest
 
+from app.core.errors import SQLExecutionError
 
 # 1 & 2. Each company's request uses its own database ---------------------
 
@@ -216,7 +217,7 @@ async def test_read_only_protections_still_apply_per_company(two_company_client)
     manager = two_company_client.app_state.company_manager
     for company_id in ("beta", "tire_guru"):
         ctx = manager.get(company_id)
-        with pytest.raises(Exception):
+        with pytest.raises(SQLExecutionError):
             ctx.executor.run_sql("DELETE FROM fact_ai_sales_net")
 
 
