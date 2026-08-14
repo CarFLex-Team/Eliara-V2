@@ -14,7 +14,6 @@ distinctive-word fallback) against that exact failure shape.
 from types import SimpleNamespace
 
 from app.core.config import Settings
-from app.llm.anthropic_client import LLMResponse
 from app.orchestrator.conversation import InMemoryConversationStore
 from app.orchestrator.orchestrator import Orchestrator
 from app.prompts.loader import PromptManager
