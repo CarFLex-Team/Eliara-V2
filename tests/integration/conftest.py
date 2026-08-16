@@ -93,6 +93,7 @@ async def two_company_client(tmp_path, monkeypatch):
                         "display_name": "Tire Guru",
                         "db_path": str(tire_db),
                         "scan_views": ["vw_tire_guru_only_marker"],
+                        "status": "partial",
                     },
                 }
             }
