@@ -80,7 +80,7 @@ deployment walkthrough including the legacy-frontend contract.
 
 Multi-company refactor complete (registry/context, multi-database runtime,
 per-company discovery, prompts/business config, request isolation,
-regression + isolation testing, production validation) with 405+ tests
+regression + isolation testing, production validation) with 414+ tests
 passing and CI green on every change. See `MIGRATION_PLAN.md` for how the
 refactor was sequenced, and the repo's open issues for known gaps
 (Tire Guru completeness, a handful of answer-quality fixes, and process
@@ -95,5 +95,7 @@ Docs: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) ·
 ## Contributing
 
 Every change goes through an issue and a pull request — no direct pushes to
-`main`. See [issue #18](https://github.com/Mosapmohamd/Eliara-V2/issues/18)
-for the standing agreement on this.
+`main`. This is enforced, not just agreed: `main` has branch protection
+requiring a pull request and at least one approval before merge. See
+[issue #18](https://github.com/Mosapmohamd/Eliara-V2/issues/18) for the
+background.
