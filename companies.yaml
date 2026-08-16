@@ -3,7 +3,14 @@
 #
 # Each entry becomes a CompanyConfig. Only company_id, display_name, and
 # db_path are required — everything else has a sane default (empty scan
-# list, no company-specific prompts/playbooks, shared embedding cache dir).
+# list, no company-specific prompts/playbooks, shared embedding cache dir,
+# status "full").
+#
+# `status: partial` means the company boots and answers questions normally
+# (its database is real and indexed) but is missing curated playbooks,
+# scan views, or business glossary data compared to a full company. This
+# is visible in GET /api/v1/health/deep as `config_status` — check there,
+# not just this file, before assuming a company is at feature parity.
 #
 # Do not hardcode a company's db path, scan views, or directories anywhere
 # else in the codebase — this file is the single source of truth for that.
@@ -32,6 +39,9 @@ companies:
     playbooks_dir: companies/tire_guru/playbooks
     prompts_dir: companies/tire_guru/prompts
     embedding_cache_dir: data/cache/tire_guru
+    # PARTIAL — see status field below and issue #22. Chat and discovery
+    # work normally against the real database (238 objects indexed), but:
+    status: partial
     # No curated scan views yet — populate once Tire Guru's real dead-stock/
     # replenishment/liquidation-style views are confirmed. /scan will report
     # "nothing configured" rather than erroring until then.
@@ -40,3 +50,7 @@ companies:
     # Guru's fact-table name isn't confirmed yet, so /health/deep will skip
     # the "data through <date>" line for this company rather than assume
     # Beta's table name applies.
+    # playbooks_dir/prompts_dir above point at directories that don't exist
+    # yet (no Tire Guru-specific playbooks or prompt overrides authored) —
+    # this is fine, both fall back to shared/no-op behavior, but it means
+    # Tire Guru currently gets zero multi-step business reviews.

@@ -33,6 +33,7 @@ def _company_health(ctx) -> DeepHealthResponse:
             database=f"unavailable: {ctx.startup_error}",
             metadata_index="not_built",
             llm="unknown",
+            config_status=ctx.config.status,
         )
 
     boundaries = None
@@ -69,6 +70,7 @@ def _company_health(ctx) -> DeepHealthResponse:
         metadata_index=metadata_index,
         llm=llm,
         last_db_refresh=last_refresh,
+        config_status=cfg.status,
     )
 
 

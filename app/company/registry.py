@@ -53,6 +53,21 @@ class CompanyConfig(BaseModel):
     boundaries_table: str | None = None
     boundaries_date_column: str | None = None
 
+    # "full" (default) or "partial" — a company that resolves and boots
+    # successfully (its database is real and readable) but is missing
+    # curated playbooks/scan views/business glossary should be marked
+    # "partial" so this is visible in /health/deep and not just in a YAML
+    # comment. A partial company still answers questions normally — this
+    # is a completeness signal, not a health signal.
+    status: str = "full"
+
+    @field_validator("status")
+    @classmethod
+    def _valid_status(cls, v: str) -> str:
+        if v not in ("full", "partial"):
+            raise ValueError(f'status must be "full" or "partial", got {v!r}')
+        return v
+
     @field_validator("company_id")
     @classmethod
     def _valid_slug(cls, v: str) -> str:

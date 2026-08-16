@@ -245,3 +245,18 @@ async def test_health_deep_reports_both_companies_independently(two_company_clie
     assert set(body["companies"]) == {"beta", "tire_guru"}
     assert body["companies"]["beta"]["status"] == "ok"
     assert body["companies"]["tire_guru"]["status"] == "ok"
+
+
+def test_real_companies_yaml_marks_tire_guru_as_partial():
+    """Config-accuracy check (issue #22): the actual, committed
+    companies.yaml — not a test fixture — must mark Tire Guru as partial
+    so this is visible to anyone reading /health/deep, not just someone
+    reading YAML comments."""
+    from pathlib import Path
+
+    from app.company.registry import CompanyRegistry
+
+    repo_root = Path(__file__).resolve().parents[2]
+    registry = CompanyRegistry.from_file(repo_root / "companies.yaml")
+    assert registry.get("beta").status == "full"
+    assert registry.get("tire_guru").status == "partial"

@@ -18,6 +18,11 @@ class DeepHealthResponse(BaseModel):
     requests_total: int = 0
     cache_hits: int = 0
     last_db_refresh: str | None = None
+    # "full" or "partial" — a completeness signal distinct from `status`
+    # (which reports runtime health). A partial company boots and answers
+    # questions normally; it's just missing curated playbooks/scan views/
+    # glossary data compared to a full company. See CompanyConfig.status.
+    config_status: str = "full"
 
 
 class ChatRequest(BaseModel):
