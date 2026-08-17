@@ -3,7 +3,7 @@
 Read-only AI business analytics platform serving **multiple companies** from
 one deployment. Anyone asks business questions in plain English; the system
 answers from that company's own analytical SQLite database (refreshed from
-SAP Business One) — preferring curated analytical views, with validated
+SAP Business One Or Tire Guru) — preferring curated analytical views, with validated
 LLM-generated SQL as fallback.
 
 Every request is scoped by `company_id`. Each registered company gets a
