@@ -39,6 +39,12 @@ companies:
     playbooks_dir: companies/tire_guru/playbooks
     prompts_dir: companies/tire_guru/prompts
     embedding_cache_dir: data/cache/tire_guru
+    # Tire Guru's registry table has a different name and a different
+    # (but compatible, via MetadataLoader's column-adaptation logic)
+    # schema than the canonical chatbot_question_view_registry — see
+    # issue #27. Confirmed via manual DB inspection: every view_name
+    # referenced here resolves to a real view.
+    registry_table: chatbot_question_router
     # PARTIAL — see status field below and issue #22. Chat and discovery
     # work normally against the real database (238 objects indexed), but:
     status: partial

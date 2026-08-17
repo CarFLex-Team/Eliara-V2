@@ -45,8 +45,9 @@ def _category(name: str, kind: str) -> str | None:
 
 
 class MetadataLoader:
-    def __init__(self, executor) -> None:
+    def __init__(self, executor, registry_table: str = "chatbot_question_view_registry") -> None:
         self._executor = executor
+        self._registry_table = registry_table
 
     def load(self) -> tuple[dict[str, ObjectMeta], list[RegistryEntry], dict[str, str], str]:
         master = self._executor.run_metadata_sql(
@@ -126,27 +127,98 @@ class MetadataLoader:
         return samples
 
     def _load_registry(self) -> list[RegistryEntry]:
+        """Loads the curated question->view registry, adapting to whatever
+        column set the configured table (self._registry_table) actually has.
+
+        The canonical schema (question_id, canonical_question, view_name,
+        assumption_status, time_scope_rule, requires_endpoint_filter,
+        enabled) is one company's shape, not a universal contract — a
+        different company's equivalent table (see issue #27, Tire Guru's
+        chatbot_question_router) can use different column names and be
+        missing some columns entirely. Rather than require every company's
+        DB team to rename columns to match Beta's, this detects what's
+        actually there and derives the rest:
+
+        - assumption_status: falls back to `business_status` if the
+          canonical column is absent.
+        - enabled: falls back to `business_status == 'READY'` if there's no
+          `enabled` column but there is a `business_status` column;
+          otherwise defaults to True (assume enabled if we can't tell).
+        - requires_endpoint_filter: falls back to "is
+          required_parameters_json a non-empty JSON array" if there's no
+          `requires_endpoint_filter` column; otherwise defaults to False.
+        - time_scope_rule: stays None if there's no equivalent column at
+          all — there is no safe way to derive this one.
+        """
+        try:
+            available = {
+                r[0] for r in self._executor.run_metadata_sql(
+                    f"SELECT name FROM pragma_table_info('{self._registry_table}')"
+                ).rows
+            }
+        except SQLExecutionError:
+            log.warning("registry_missing", table=self._registry_table)
+            return []
+        if not available:
+            log.warning("registry_missing", table=self._registry_table)
+            return []
+
+        has_assumption_status = "assumption_status" in available
+        has_business_status = "business_status" in available
+        has_enabled = "enabled" in available
+        has_requires_filter = "requires_endpoint_filter" in available
+        has_required_params = "required_parameters_json" in available
+        has_time_scope = "time_scope_rule" in available
+
+        status_col = "assumption_status" if has_assumption_status else (
+            "business_status" if has_business_status else "NULL"
+        )
+        time_scope_col = "time_scope_rule" if has_time_scope else "NULL"
+        filter_col = "requires_endpoint_filter" if has_requires_filter else (
+            "required_parameters_json" if has_required_params else "NULL"
+        )
+        enabled_col = "enabled" if has_enabled else (
+            "business_status" if has_business_status else "NULL"
+        )
+
         try:
             result = self._executor.run_metadata_sql(
-                "SELECT question_id, canonical_question, view_name, assumption_status,"
-                " time_scope_rule, requires_endpoint_filter, enabled"
-                " FROM chatbot_question_view_registry ORDER BY question_id"
+                f"SELECT question_id, canonical_question, view_name, {status_col},"
+                f" {time_scope_col}, {filter_col}, {enabled_col}"
+                f' FROM "{self._registry_table}" ORDER BY question_id'
             )
         except SQLExecutionError:
-            log.warning("registry_missing")
+            log.warning("registry_missing", table=self._registry_table)
             return []
-        return [
-            RegistryEntry(
-                question_id=r[0],
-                canonical_question=r[1],
-                view_name=r[2],
-                assumption_status=r[3],
-                time_scope_rule=r[4],
-                requires_endpoint_filter=bool(r[5]),
-                enabled=bool(r[6]),
+
+        entries = []
+        for r in result.rows:
+            if has_requires_filter:
+                requires_filter = bool(r[5])
+            elif has_required_params:
+                requires_filter = bool(r[5]) and str(r[5]).strip() not in ("", "[]", "null", "None")
+            else:
+                requires_filter = False
+
+            if has_enabled:
+                enabled = bool(r[6])
+            elif has_business_status:
+                enabled = str(r[6]).strip().upper() == "READY"
+            else:
+                enabled = True
+
+            entries.append(
+                RegistryEntry(
+                    question_id=r[0],
+                    canonical_question=r[1],
+                    view_name=r[2],
+                    assumption_status=r[3],
+                    time_scope_rule=r[4],
+                    requires_endpoint_filter=requires_filter,
+                    enabled=enabled,
+                )
             )
-            for r in result.rows
-        ]
+        return entries
 
     def _load_glossary(self) -> dict[str, str]:
         for source in ("vw_gold_business_glossary", "batch_13_business_glossary"):
