@@ -42,16 +42,42 @@ companies:
     # Tire Guru's registry table has a different name and a different
     # (but compatible, via MetadataLoader's column-adaptation logic)
     # schema than the canonical chatbot_question_view_registry — see
-    # issue #27. Confirmed via manual DB inspection: every view_name
+    # issue #28. Confirmed via manual DB inspection: every view_name
     # referenced here resolves to a real view.
     registry_table: chatbot_question_router
     # PARTIAL — see status field below and issue #22. Chat and discovery
     # work normally against the real database (238 objects indexed), but:
     status: partial
-    # No curated scan views yet — populate once Tire Guru's real dead-stock/
-    # replenishment/liquidation-style views are confirmed. /scan will report
-    # "nothing configured" rather than erroring until then.
-    scan_views: []
+    # Curated dead-stock/liquidation/stockout scan views — see issue #6.
+    # Confirmed via manual DB inspection (row counts verified live) AND
+    # via a synthetic-data test proving the correct value/label columns
+    # get auto-detected for each (build_attention_queue picks the FIRST
+    # numeric non-hint-excluded column as "value" — raw SELECT * would
+    # have silently ranked by on_hand_quantity instead of dead_stock_score/
+    # days_since_last_sale, producing a backwards HIGH/LOW ranking; caught
+    # before shipping, not after). Each view below explicitly SELECTs a
+    # curated, deliberately-ordered column list rather than SELECT * for
+    # exactly this reason.
+    #   - dead stock: vw_tire_guru_dead_stock_ranked (wraps the pre-built
+    #     chatbot_dead_stock_fast table with correct column ordering)
+    #   - slow-moving: vw_tire_guru_slow_moving_items (filters
+    #     engine_dead_stock_recommendation_v2 WHERE stock_classification
+    #     = 'SLOW_MOVING' — 11 rows)
+    #   - liquidation/capital-locked: vw_tire_guru_liquidation_candidates
+    #     (same source table WHERE stock_classification = 'DEAD_STOCK',
+    #     ordered by liquidation_priority_rank — 2 rows)
+    #   - stockout/replenishment: vw_tire_guru_critical_stockout (filters
+    #     engine_reorder_recommendation_v2 WHERE reorder_urgency =
+    #     'CRITICAL_STOCKOUT' — 988 rows)
+    # No overstock/excess equivalent exists in this schema at all (no
+    # view, no classification value) — Tire Guru's business (tire
+    # wholesale) apparently doesn't track that the way Beta does.
+    # Confirmed absent, not just unmapped.
+    scan_views:
+      - vw_tire_guru_dead_stock_ranked
+      - vw_tire_guru_slow_moving_items
+      - vw_tire_guru_liquidation_candidates
+      - vw_tire_guru_critical_stockout
     # boundaries_table/boundaries_date_column intentionally omitted: Tire
     # Guru's fact-table name isn't confirmed yet, so /health/deep will skip
     # the "data through <date>" line for this company rather than assume

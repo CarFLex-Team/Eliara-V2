@@ -260,3 +260,24 @@ def test_real_companies_yaml_marks_tire_guru_as_partial():
     registry = CompanyRegistry.from_file(repo_root / "companies.yaml")
     assert registry.get("beta").status == "full"
     assert registry.get("tire_guru").status == "partial"
+
+
+def test_real_companies_yaml_tire_guru_scan_views_configured():
+    """Config-accuracy check (issue #6): Tire Guru's scan_views must be
+    populated with the 4 confirmed views (dead stock, slow-moving,
+    liquidation, critical stockout) — not left empty. Overstock/excess is
+    deliberately absent: confirmed via manual DB inspection that no
+    equivalent concept exists in Tire Guru's schema at all, unlike Beta."""
+    from pathlib import Path
+
+    from app.company.registry import CompanyRegistry
+
+    repo_root = Path(__file__).resolve().parents[2]
+    registry = CompanyRegistry.from_file(repo_root / "companies.yaml")
+    scan_views = registry.get("tire_guru").scan_views
+    assert scan_views == [
+        "vw_tire_guru_dead_stock_ranked",
+        "vw_tire_guru_slow_moving_items",
+        "vw_tire_guru_liquidation_candidates",
+        "vw_tire_guru_critical_stockout",
+    ]
