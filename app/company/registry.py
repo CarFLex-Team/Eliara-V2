@@ -53,6 +53,12 @@ class CompanyConfig(BaseModel):
     boundaries_table: str | None = None
     boundaries_date_column: str | None = None
 
+    # Table this company's curated-question registry lives in. Defaults to
+    # the "canonical" name; a company whose registry has a different name
+    # (and possibly a different column set — see MetadataLoader._load_registry's
+    # column-adaptation logic) points this at that table instead.
+    registry_table: str = "chatbot_question_view_registry"
+
     # "full" (default) or "partial" — a company that resolves and boots
     # successfully (its database is real and readable) but is missing
     # curated playbooks/scan views/business glossary should be marked

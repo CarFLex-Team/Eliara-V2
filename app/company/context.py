@@ -138,7 +138,7 @@ class CompanyContextManager:
             query_timeout_s=self._settings.query_timeout_s,
             max_rows=self._settings.max_rows,
         )
-        index, retriever = build_discovery(executor, self._settings)
+        index, retriever = build_discovery(executor, self._settings, cfg.registry_table)
         entities = build_entity_index(
             executor,
             index.objects,
@@ -199,7 +199,7 @@ class CompanyContextManager:
             return
         ctx.executor.reopen()
         ctx.result_cache.clear()
-        new_index, new_retriever = build_discovery(ctx.executor, self._settings)
+        new_index, new_retriever = build_discovery(ctx.executor, self._settings, ctx.config.registry_table)
         new_entities = build_entity_index(
             ctx.executor,
             new_index.objects,
