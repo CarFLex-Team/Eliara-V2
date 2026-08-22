@@ -551,7 +551,7 @@ class Orchestrator:
                     await queue.put({"type": "visual", "value": visual})
                 await queue.put({"type": "done"})
             except Exception as exc:  # noqa: BLE001 - surface to the client, don't crash the stream
-                log.warning("stream_failed", error=type(exc).__name__)
+                log.warning("stream_failed", error=type(exc).__name__, exc_info=True)
                 await queue.put({"type": "error", "detail": type(exc).__name__})
             finally:
                 await queue.put(_DONE)
